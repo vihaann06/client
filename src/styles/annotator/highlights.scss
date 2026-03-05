@@ -154,6 +154,21 @@
   @include clusterHighlightStyles('other-content');
 }
 
+// Tag-based highlight colors: annotation tags (e.g. "yellow", "important")
+// map to these classes so each annotation can have a distinct color.
+@mixin tagHighlightStyles($name) {
+  .hypothesis-highlight.tag-#{$name},
+  .hypothesis-svg-highlight.tag-#{$name} {
+    --highlight-color: var(--hypothesis-color-#{$name});
+  }
+}
+@include tagHighlightStyles('yellow');
+@include tagHighlightStyles('pink');
+@include tagHighlightStyles('orange');
+@include tagHighlightStyles('green');
+@include tagHighlightStyles('purple');
+@include tagHighlightStyles('grey');
+
 // Apply highlight styling.
 
 // Highlights are non-visible when .hypothesis-highlight-always-on class not present.

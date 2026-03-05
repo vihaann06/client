@@ -34,6 +34,7 @@ import { LayoutChangeEvent } from './events';
 import { FeatureFlags } from './features';
 import { HighlightClusterController } from './highlight-clusters';
 import { Highlighter } from './highlighter';
+import { getHighlightClassForTags } from './tag-highlight-color';
 import { createIntegration } from './integrations';
 import { OutsideAssignmentNoticeController } from './outside-assignment-notice';
 import {
@@ -950,11 +951,16 @@ export class Guest
         return;
       }
 
+      // Use tag-based color if the annotation has a tag that maps to a color;
+      // otherwise use cluster-based styling (user vs other).
+      const tagClass = getHighlightClassForTags(anchor.annotation?.tags);
+      const cssClass = tagClass ?? anchor.annotation?.$cluster;
+
       let highlights;
       if (region instanceof Range) {
         highlights = this._highlighter.highlightRange(
           region,
-          anchor.annotation?.$cluster /* cssClass */,
+          cssClass,
         ) as AnnotationHighlight[];
       } else {
         highlights = this._highlighter.highlightShape(

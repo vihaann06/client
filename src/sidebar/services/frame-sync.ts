@@ -4,6 +4,9 @@ import debounce from 'lodash.debounce';
 import type { DebouncedFunction } from 'lodash.debounce';
 import shallowEqual from 'shallowequal';
 
+// TODO: Add a textbox for queries by the user
+// Make an API call to Claude/OpenAI API
+
 import {
   PortFinder,
   PortRPC,
@@ -53,12 +56,14 @@ export function formatAnnot({
   $tag,
   target,
   uri,
+  tags,
 }: Annotation): AnnotationData {
   return {
     $cluster,
     $tag,
     target,
     uri,
+    tags,
   };
 }
 
