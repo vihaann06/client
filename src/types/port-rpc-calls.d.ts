@@ -248,6 +248,11 @@ export type SidebarToGuestCalls = {
    * Expose the guest document info to the sidebar
    */
   getDocumentInfo(callback: (info: DocumentInfo) => void): void;
+
+  /**
+   * Highlight all text in the document that matches the given query string.
+   */
+  highlightTextMatches(query: string): void;
 };
 
 /** Calls that the sidebar makes to the host. */

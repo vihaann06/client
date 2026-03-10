@@ -749,6 +749,17 @@ export class FrameSyncService {
     return promise;
   }
 
+  /**
+   * Ask the main guest frame to highlight all text that matches `query`.
+   */
+  async highlightTextMatches(query: string) {
+    const guest = this._guestRPC.get(null);
+    if (!guest) {
+      throw new Error('No guest connected');
+    }
+    guest.call('highlightTextMatches', query);
+  }
+
   // Only used to cleanup tests
   destroy() {
     this._portFinder.destroy();

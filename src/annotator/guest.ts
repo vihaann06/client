@@ -61,6 +61,38 @@ function annotationsForSelection(): string[] {
 }
 
 /**
+ * Find all ranges in `root` whose text content includes `query` (case-insensitive).
+ */
+function findTextRanges(root: Element, query: string): Range[] {
+  const ranges: Range[] = [];
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  const lowerQuery = query.toLowerCase();
+
+  let node: Node | null;
+  // eslint-disable-next-line no-cond-assign
+  while ((node = walker.nextNode())) {
+    const text = node.textContent ?? '';
+    const lowerText = text.toLowerCase();
+    let index = 0;
+
+    // Find all non-overlapping matches within this text node.
+    while (true) {
+      const foundIndex = lowerText.indexOf(lowerQuery, index);
+      if (foundIndex === -1) {
+        break;
+      }
+      const range = document.createRange();
+      range.setStart(node, foundIndex);
+      range.setEnd(node, foundIndex + query.length);
+      ranges.push(range);
+      index = foundIndex + lowerQuery.length;
+    }
+  }
+
+  return ranges;
+}
+
+/**
  * Return the annotation tags associated with visible highlights at given
  * (clientX, clientY) coordinates.
  */
@@ -740,6 +772,19 @@ export class Guest
         .catch(error => callback({ ok: false, error: error.message }));
     });
 
+    this._sidebarRPC.on('highlightTextMatches', async (query: string) => {
+      const trimmed = query.trim();
+      if (!trimmed) {
+        return;
+      }
+      const contentRoot = this._integration.contentContainer();
+      const ranges = findTextRanges(contentRoot, trimmed);
+      if (ranges.length === 0) {
+        return;
+      }
+      await this._createHighlightsForRanges(ranges);
+    });
+
     // Connect to sidebar and send document info/URIs to it.
     //
     // RPC calls are deferred until a connection is made, so these steps can
@@ -1164,6 +1209,50 @@ export class Guest
     removeTextSelection();
 
     return annotation;
+  }
+
+  /**
+   * Create highlight annotations for each of the given ranges.
+   */
+  private async _createHighlightsForRanges(
+    ranges: Range[],
+  ): Promise<AnnotationData[]> {
+    if (ranges.length === 0) {
+      return [];
+    }
+
+    const info = await this.getDocumentInfo();
+    const root = this.element;
+    const rangeSelectors = await Promise.all(
+      ranges.map(range => this._integration.describe(root, range)),
+    );
+
+    const annotations: AnnotationData[] = rangeSelectors.map(selectors => {
+      const target: Target[] = [
+        {
+          source: info.uri,
+          // In the Hypothesis API the field containing the selectors is called
+          // `selector`, despite being a list.
+          selector: selectors,
+        },
+      ];
+
+      return {
+        uri: info.uri,
+        document: info.metadata,
+        target,
+        $highlight: true,
+        $cluster: 'user-highlights',
+        $tag: 'a:' + generateHexString(8),
+      };
+    });
+
+    for (const annotation of annotations) {
+      this._sidebarRPC.call('createAnnotation', annotation);
+      this.anchor(annotation);
+    }
+
+    return annotations;
   }
 
   /**

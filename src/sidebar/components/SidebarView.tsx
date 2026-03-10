@@ -1,5 +1,5 @@
 import classnames from 'classnames';
-import { useEffect, useRef } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 
 import { tabForAnnotation } from '../helpers/tabs';
 import { withServices } from '../service-context';
@@ -127,6 +127,8 @@ function SidebarView({
     }
   }, [hasFetchedProfile, isLoggedIn, sidebarHasOpened, streamer]);
 
+  const [highlightQuery, setHighlightQuery] = useState('');
+
   return (
     <div className="relative">
       <h2 className="sr-only">Annotations</h2>
@@ -165,8 +167,27 @@ function SidebarView({
             <textarea
               className="w-full border rounded px-2 py-1 text-sm"
               rows={3}
+              value={highlightQuery}
+              onInput={e =>
+                setHighlightQuery(
+                  (e.target as HTMLTextAreaElement).value ?? '',
+                )
+              }
               placeholder="Describe the kinds of lines you want highlighted..."
             />
+            <button
+              type="button"
+              className="mt-2 px-3 py-1 text-xs font-medium rounded bg-grey-6 text-white hover:bg-grey-7"
+              onClick={() => {
+                const q = highlightQuery.trim();
+                if (!q) {
+                  return;
+                }
+                frameSync.highlightTextMatches(q);
+              }}
+            >
+              Highlight matches
+            </button>
           </div>
         </>
       )}
