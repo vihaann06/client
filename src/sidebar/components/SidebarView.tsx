@@ -155,7 +155,21 @@ function SidebarView({
       {hasDirectLinkedGroupError && (
         <SidebarContentError errorType="group" onLoginRequest={onLogin} />
       )}
-      {!hasContentError && <SidebarTabs isLoading={isLoading} />}
+      {!hasContentError && (
+        <>
+          <SidebarTabs isLoading={isLoading} />
+          <div className="mt-3 mb-4">
+            <label className="block text-sm font-medium text-grey-7 mb-1">
+              LLM prompt (not yet connected)
+            </label>
+            <textarea
+              className="w-full border rounded px-2 py-1 text-sm"
+              rows={3}
+              placeholder="Describe the kinds of lines you want highlighted..."
+            />
+          </div>
+        </>
+      )}
       {showLoggedOutMessage && <LoggedOutMessage onLogin={onLogin} />}
     </div>
   );
